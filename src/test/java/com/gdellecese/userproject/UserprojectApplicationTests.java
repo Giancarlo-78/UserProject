@@ -1,4 +1,4 @@
-package com.gdellecese.UserProject;
+package com.gdellecese.userproject;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
