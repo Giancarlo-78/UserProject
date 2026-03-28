@@ -11,25 +11,6 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
 
-    # Job-level env — available in both services and steps
-    env:
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-
-    # MySQL service container — required for integration tests
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
-          MYSQL_DATABASE: userdb
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -p${{ env.DB_PASSWORD }}"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
       # Step 1 — Checkout repository code
       - name: Checkout code
@@ -43,13 +24,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Step 3 — Build project and run all tests
+      # Step 3 — Build project and run all tests using H2 in-memory DB
       - name: Build and run tests
-        env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/userdb
-          SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: mvn clean package -B
+        run: mvn clean package -B -Dspring.profiles.active=test
 
       # Step 4 — Build Docker image to verify Dockerfile is valid
       - name: Build Docker image
