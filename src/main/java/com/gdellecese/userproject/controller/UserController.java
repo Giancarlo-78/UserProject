@@ -7,8 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/users")
@@ -45,5 +49,22 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> uploadCsv(
+            @RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+
+        if (!Objects.requireNonNull(file.getOriginalFilename()).endsWith(".csv")) {
+            return ResponseEntity.badRequest().body("Only CSV files are allowed");
+        }
+
+        userService.processFile(file);
+
+        return ResponseEntity.ok("File accepted. Processing completed.");
     }
 }

@@ -8,7 +8,18 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +41,6 @@ public class UserService {
      * fare una ricerca su spring data
      * @param firstName
      * @param lastName
-     * @param age
      * @return
      */
     public List<UserResponseDto> getAllUsers(String firstName, String lastName) {
@@ -79,6 +89,39 @@ public class UserService {
             throw new EntityNotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
+    }
+
+    // CSV IMPORT
+    public void processFile(MultipartFile file) {
+        try (
+                Reader reader = new BufferedReader(
+                        new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))
+        ) {
+            CSVReader csvReader = new CSVReaderBuilder(reader)
+                    .withSkipLines(1) // Salta la riga di intestazione
+                    .build();
+
+            List<String[]> rows = csvReader.readAll();
+            List<User> users = new ArrayList<>();
+
+            for (String[] row : rows) {
+                if (row.length < 4) continue; // Salta righe malformate
+
+                User user = User.builder()
+                        .firstName(row[0].trim())
+                        .lastName(row[1].trim())
+                        .email(row[2].trim())
+                        .address(row[3].trim())
+                        .build();
+
+                users.add(user);
+            }
+
+            userRepository.saveAll(users);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to process CSV file: " + e.getMessage());
+        }
     }
 
     // --- Metodi di conversione privati ---
