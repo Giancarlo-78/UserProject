@@ -9,10 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -31,7 +33,7 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
     private UserRequestDto requestDto;
@@ -175,5 +177,58 @@ class UserControllerTest {
         mockMvc.perform(delete("/api/users/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
+    }
+
+    // ---- CSV UPLOAD ----
+
+    @Test
+    void uploadCsv_withValidFile_shouldReturn200() throws Exception {
+        // Arrange
+        String csvContent = "firstName,lastName,email,address\n" +
+                "Mario,Rossi,mario.rossi@gmail.com,Roma";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.csv",
+                "text/csv",
+                csvContent.getBytes(StandardCharsets.UTF_8)
+        );
+
+        // Act & Assert
+        mockMvc.perform(multipart("/api/users/upload").file(file))
+                .andExpect(status().isOk())
+                .andExpect(content().string("File accepted. Processing completed."));
+    }
+
+    @Test
+    void uploadCsv_withEmptyFile_shouldReturn400() throws Exception {
+        // Arrange
+        MockMultipartFile emptyFile = new MockMultipartFile(
+                "file",
+                "empty.csv",
+                "text/csv",
+                new byte[0]  // 0 byte — file vuoto
+        );
+
+        // Act & Assert
+        mockMvc.perform(multipart("/api/users/upload").file(emptyFile))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("File is empty"));
+    }
+
+    @Test
+    void uploadCsv_withNonCsvFile_shouldReturn400() throws Exception {
+        // Arrange
+        MockMultipartFile txtFile = new MockMultipartFile(
+                "file",
+                "test.txt",  // estensione sbagliata
+                "text/plain",
+                "some content".getBytes()
+        );
+
+        // Act & Assert
+        mockMvc.perform(multipart("/api/users/upload").file(txtFile))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Only CSV files are allowed"));
     }
 }

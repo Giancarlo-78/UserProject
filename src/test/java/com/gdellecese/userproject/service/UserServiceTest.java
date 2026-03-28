@@ -12,6 +12,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.mock;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -201,5 +209,67 @@ class UserServiceTest {
         assertThatThrownBy(() -> userService.deleteUser(99L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("99");
+    }
+
+    // ---- CSV IMPORT ----
+
+    @Test
+    void processFile_withValidCsv_shouldSaveUsers() throws Exception {
+        // Arrange
+        String csvContent = "firstName,lastName,email,address\n" +
+                "Mario,Rossi,mario.rossi@gmail.com,Roma\n" +
+                "Luigi,Bianchi,luigi.bianchi@gmail.com,Milano";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.csv",
+                "text/csv",
+                csvContent.getBytes(StandardCharsets.UTF_8)
+        );
+
+        // Act
+        userService.processFile(file);
+
+        // Assert
+        verify(userRepository, times(1)).saveAll(anyList());
+    }
+
+    @Test
+    void processFile_withMalformedRow_shouldSkipAndSaveValid() throws Exception {
+        // Arrange — seconda riga malformata (meno di 4 colonne)
+        String csvContent = "firstName,lastName,email,address\n" +
+                "Mario,Rossi,mario.rossi2@gmail.com,Roma\n" +
+                "Luigi\n" +
+                "Anna,Verdi,anna.verdi2@gmail.com,Napoli";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.csv",
+                "text/csv",
+                csvContent.getBytes(StandardCharsets.UTF_8)
+        );
+
+        // Act
+        userService.processFile(file);
+
+        // Assert — saveAll chiamato una volta con lista non vuota
+        verify(userRepository, times(1)).saveAll(anyList());
+    }
+
+    @Test
+    void processFile_withEmptyInputStream_shouldThrowRuntimeException() {
+        // Arrange — file che lancia IOException
+        MultipartFile brokenFile = mock(MultipartFile.class);
+        try {
+            when(brokenFile.getInputStream())
+                    .thenThrow(new IOException("Simulated IO error"));
+        } catch (IOException e) {
+            fail("Setup failed");
+        }
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.processFile(brokenFile))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Failed to process CSV file");
     }
 }
