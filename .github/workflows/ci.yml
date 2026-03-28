@@ -1,7 +1,5 @@
 name: CI Pipeline
 
-# Triggers on every push to any branch
-# and on pull requests targeting master
 on:
   push:
     branches: [ "**" ]
@@ -13,17 +11,21 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
 
+    # Job-level env — available in both services and steps
+    env:
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
     # MySQL service container — required for integration tests
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
           MYSQL_DATABASE: userdb
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -p${{ secrets.DB_PASSWORD }}"
+          --health-cmd="mysqladmin ping -h localhost -u root -p${{ env.DB_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
