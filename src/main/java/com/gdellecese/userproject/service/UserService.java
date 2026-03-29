@@ -37,11 +37,16 @@ public class UserService {
     // READ ALL (con filtri opzionali)
 
     /**
-     * questa la soluzione piu semplice per sopportarela ricerca per solo due attribiti opzionalei
-     * fare una ricerca su spring data
+     **
+     * Retrieves all users, with optional filtering by first name and/or last name.
+     *
+     * <p>This implementation deliberately adopts the simplest approach that satisfies
+     * the current requirements (two optional filter attributes), in line with the
+     * TDD principle of writing the minimum code needed to make the tests pass.
+     * {@code QueryDSL} predicate-based approach
      * @param firstName
      * @param lastName
-     * @return
+     * @return a {@link List} of {@link UserResponseDto} matching the provided filters, or all users if no filters are provided.
      */
     public List<UserResponseDto> getAllUsers(String firstName, String lastName) {
         List<User> users;
