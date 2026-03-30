@@ -2,6 +2,7 @@ package com.gdellecese.userproject.service;
 
 import com.gdellecese.userproject.dto.UserRequestDto;
 import com.gdellecese.userproject.dto.UserResponseDto;
+import com.gdellecese.userproject.mapper.UserMapper;
 import com.gdellecese.userproject.model.User;
 import com.gdellecese.userproject.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -19,7 +20,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -29,12 +29,12 @@ public class UserService {
 
     // CREATE
     public UserResponseDto createUser(UserRequestDto dto) {
-        User user = toEntity(dto);
+        User user = UserMapper.toEntity(dto);
         User saved = userRepository.save(user);
-        return toDto(saved);
+        return UserMapper.toDto(saved);
     }
 
-    // READ ALL (con filtri opzionali)
+    // READ ALL
 
     /**
      **
@@ -63,7 +63,7 @@ public class UserService {
         }
 
         return users.stream()
-                .map(this::toDto)
+                .map(UserMapper::toDto)
                 .toList();
     }
 
@@ -71,7 +71,7 @@ public class UserService {
     public UserResponseDto getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-        return toDto(user);
+        return UserMapper.toDto(user);
     }
 
     // UPDATE
@@ -85,7 +85,7 @@ public class UserService {
         user.setAddress(dto.getAddress());
 
         User updated = userRepository.save(user);
-        return toDto(updated);
+        return UserMapper.toDto(updated);
     }
 
     // DELETE
@@ -127,26 +127,5 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to process CSV file: " + e.getMessage());
         }
-    }
-
-    // --- Metodi di conversione privati ---
-
-    private User toEntity(UserRequestDto dto) {
-        return User.builder()
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .email(dto.getEmail())
-                .address(dto.getAddress())
-                .build();
-    }
-
-    private UserResponseDto toDto(User user) {
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .address(user.getAddress())
-                .build();
     }
 }

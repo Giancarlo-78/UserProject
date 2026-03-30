@@ -1,8 +1,12 @@
 spring:
+  application:
+    name: userproject
+
   datasource:
     url: jdbc:mysql://localhost:3306/userdb
     username: root
     password: Giancarlo
+
   jpa:
     hibernate:
       ddl-auto: update
