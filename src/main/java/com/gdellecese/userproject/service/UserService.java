@@ -103,14 +103,14 @@ public class UserService {
                         new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))
         ) {
             CSVReader csvReader = new CSVReaderBuilder(reader)
-                    .withSkipLines(1) // Salta la riga di intestazione
+                    .withSkipLines(1) // Skip the header row
                     .build();
 
             List<String[]> rows = csvReader.readAll();
-            List<User> users = new ArrayList<>();
+            List<User> users = new ArrayList<>(rows.size());
 
             for (String[] row : rows) {
-                if (row.length < 4) continue; // Salta righe malformate
+                if (row.length < 4) continue; // Skip malformed rows
 
                 User user = User.builder()
                         .firstName(row[0].trim())

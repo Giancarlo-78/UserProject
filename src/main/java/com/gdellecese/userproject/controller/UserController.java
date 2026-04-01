@@ -61,7 +61,9 @@ public class UserController {
         if (!Objects.requireNonNull(file.getOriginalFilename()).endsWith(".csv")) {
             return ResponseEntity.badRequest().body("Only CSV files are allowed");
         }
-
+        //  TODO: improve performance — processFile should run asynchronously
+        //  (e.g. via @Async or a message queue) so the caller gets an
+        //   immediate acknowledgement instead of waiting for full processing
         userService.processFile(file);
 
         return ResponseEntity.ok("File accepted. Processing completed.");

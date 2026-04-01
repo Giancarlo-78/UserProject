@@ -252,13 +252,13 @@ class UserServiceTest {
         // Act
         userService.processFile(file);
 
-        // Assert — saveAll chiamato una volta con lista non vuota
+        // Assert — saveAll called once with a non-empty list
         verify(userRepository, times(1)).saveAll(anyList());
     }
 
     @Test
     void processFile_withEmptyInputStream_shouldThrowRuntimeException() {
-        // Arrange — file che lancia IOException
+        // Arrange — file that throws IOException
         MultipartFile brokenFile = mock(MultipartFile.class);
         try {
             when(brokenFile.getInputStream())

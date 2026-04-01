@@ -98,7 +98,7 @@ class UserRepositoryTest {
     void findByFirstNameContainingIgnoreCase_partialMatch_shouldWork() {
         List<User> result = userRepository.findByFirstNameContainingIgnoreCase("ar");
 
-        // "Mario" contiene "ar"
+        // "Mario" contains "ar"
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getFirstName()).isEqualTo("Mario");
     }
@@ -107,7 +107,7 @@ class UserRepositoryTest {
     void findByLastNameContainingIgnoreCase_shouldReturnMatches() {
         List<User> result = userRepository.findByLastNameContainingIgnoreCase("rossi");
 
-        // Mario Rossi e Luigi Rossi
+        // Mario Rossi and Luigi Rossi
         assertThat(result).hasSize(2);
     }
 
